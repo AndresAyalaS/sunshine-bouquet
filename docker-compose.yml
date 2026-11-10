@@ -36,7 +36,12 @@ services:
     ports:
       - "4000:4000"
 
-  # frontend: se agrega en la siguiente etapa
+  frontend:
+    build: ./frontend
+    depends_on:
+      - gateway
+    ports:
+      - "4200:80"
 
 volumes:
   sqldata:
