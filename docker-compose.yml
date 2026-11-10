@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_strong_Passw0rd"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      ConnectionStrings__Default: "Server=db,1433;Database=SunshineBouquet;User Id=sa;Password=Your_strong_Passw0rd;TrustServerCertificate=True"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:8080"
+
+  gateway:
+    build: ./gateway
+    environment:
+      ORDERS_SUBGRAPH_URL: "http://api:8080/graphql"
+    depends_on:
+      - api
+    restart: on-failure # reintenta hasta que el subgrafo esté arriba
+    ports:
+      - "4000:4000"
+
+  # frontend: se agrega en la siguiente etapa
+
+volumes:
+  sqldata:

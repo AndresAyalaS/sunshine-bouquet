@@ -1,0 +1,14 @@
+{
+  "name": "sunshine-bouquet-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@apollo/gateway": "^2.9.3",
+    "@apollo/server": "^4.11.2",
+    "graphql": "^16.9.0"
+  }
+}

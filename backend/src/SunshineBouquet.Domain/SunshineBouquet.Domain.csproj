@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Sin dependencias externas: el dominio no conoce EF, GraphQL ni ASP.NET. -->
+</Project>
