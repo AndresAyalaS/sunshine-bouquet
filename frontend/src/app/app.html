@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-md navbar-dark app-navbar">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" routerLink="/" (click)="closeMenu()">Sunshine Bouquet</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      aria-label="Abrir menú"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="toggleMenu()"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse" [class.show]="menuOpen()">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a
+            class="nav-link"
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMenu()"
+            >Dashboard</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/orders" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Órdenes</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/orders/new" routerLinkActive="active" (click)="closeMenu()">Nueva orden</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <router-outlet />
+</main>
