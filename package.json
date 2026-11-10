@@ -1,0 +1,14 @@
+{
+  "name": "sunshine-bouquet",
+  "version": "1.0.0",
+  "description": "MVP para gestionar órdenes de exportación de ramos de flores LATAM → USA.",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix frontend run lint"
+  },
+  "author": "Andres_Gerardo_Ayala_Sanchez",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
