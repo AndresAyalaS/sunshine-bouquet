@@ -1,0 +1,440 @@
+{
+  "info": {
+    "name": "Sunshine Bouquet - GraphQL API",
+    "description": "Colección para probar la API de órdenes de exportación a través del Apollo Gateway.\n\nFlujo sugerido: Mutations 1 → 2 → 3 → 4, luego Queries y Errores esperados.\nCambia gatewayUrl a http://localhost:5000/graphql para llamar directo al subgrafo .NET.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Queries",
+      "item": [
+        {
+          "name": "Listar órdenes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Orders {\n  orders {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Lista todas las órdenes, de la más reciente a la más antigua."
+          }
+        },
+        {
+          "name": "Listar órdenes por estado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Orders($status: OrderStatus) {\n  orders(status: $status) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"status\": \"CREATED\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Valores: CREATED, IN_TRANSIT, DELIVERED, CANCELLED."
+          }
+        },
+        {
+          "name": "Detalle de orden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query Order($id: UUID!) {\n  order(id: $id) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Usa la variable de colección orderId (se llena al crear una orden)."
+          }
+        },
+        {
+          "name": "Estadísticas (dashboard)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query OrderStats {\n  orderStats {\n    total\n    byStatus {\n      status\n      count\n    }\n  }\n}",
+                "variables": ""
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Siempre devuelve los 4 estados, aunque tengan 0 órdenes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mutations",
+      "item": [
+        {
+          "name": "1. Crear orden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateOrder($input: CreateOrderInput!) {\n  createOrder(input: $input) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"customerStore\": \"Flower Shop NYC\",\n    \"originCountry\": \"Colombia\",\n    \"destinationCity\": \"Miami\",\n    \"bouquetQuantity\": 300\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Guarda el id de la orden creada en la variable orderId."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Sin errores GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+                  "pm.collectionVariables.set('orderId', body.data.createOrder.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Asignar a tienda cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AssignOrderToStore($id: UUID!, $customerStore: String!) {\n  assignOrderToStore(id: $id, customerStore: $customerStore) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\",\n  \"customerStore\": \"Bloom & Co Chicago\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Solo permitido en órdenes CREATED."
+          }
+        },
+        {
+          "name": "3. CREATED → IN_TRANSIT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateOrderStatus($id: UUID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\",\n  \"status\": \"IN_TRANSIT\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. IN_TRANSIT → DELIVERED",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateOrderStatus($id: UUID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\",\n  \"status\": \"DELIVERED\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar (CREATED → CANCELLED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateOrderStatus($id: UUID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    id\n    customerStore\n    originCountry\n    destinationCity\n    bouquetQuantity\n    status\n    createdAt\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\",\n  \"status\": \"CANCELLED\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Crea primero una orden nueva (paso 1); una orden ya en tránsito no se puede cancelar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Errores esperados",
+      "item": [
+        {
+          "name": "Transición inválida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateOrderStatus($id: UUID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    status\n  }\n}",
+                "variables": "{\n  \"id\": \"{{orderId}}\",\n  \"status\": \"CREATED\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            },
+            "description": "Ejecutar después de avanzar la orden (p. ej. a DELIVERED): volver a CREATED no está permitido."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Error de negocio INVALID_STATUS_TRANSITION', () => {",
+                  "  pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.errors[0].extensions.code).to.eql('INVALID_STATUS_TRANSITION');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cantidad inválida",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateOrder($input: CreateOrderInput!) {\n  createOrder(input: $input) {\n    id\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"customerStore\": \"Flower Shop NYC\",\n    \"originCountry\": \"Colombia\",\n    \"destinationCity\": \"Miami\",\n    \"bouquetQuantity\": 0\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Error de negocio INVALID_QUANTITY', () => {",
+                  "  pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.errors[0].extensions.code).to.eql('INVALID_QUANTITY');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campo requerido vacío",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation CreateOrder($input: CreateOrderInput!) {\n  createOrder(input: $input) {\n    id\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"customerStore\": \"\",\n    \"originCountry\": \"Colombia\",\n    \"destinationCity\": \"Miami\",\n    \"bouquetQuantity\": 10\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Error de negocio REQUIRED_FIELD', () => {",
+                  "  pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.errors[0].extensions.code).to.eql('REQUIRED_FIELD');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orden no encontrada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation UpdateOrderStatus($id: UUID!, $status: OrderStatus!) {\n  updateOrderStatus(id: $id, status: $status) {\n    status\n  }\n}",
+                "variables": "{\n  \"id\": \"00000000-0000-0000-0000-000000000000\",\n  \"status\": \"IN_TRANSIT\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{gatewayUrl}}",
+              "host": [
+                "{{gatewayUrl}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.test('Error de negocio ORDER_NOT_FOUND', () => {",
+                  "  pm.expect(body.errors).to.be.an('array').that.is.not.empty;",
+                  "  pm.expect(body.errors[0].extensions.code).to.eql('ORDER_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:4000/"
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    }
+  ]
+}
